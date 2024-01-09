@@ -1,0 +1,35 @@
+version: '3'
+
+services:
+  e-shop:
+    image: kiii_e-shop:latest
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./e-shop:/usr/src/app
+    restart: always
+    networks:
+      - e-shop-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+    networks:
+      - e-shop-network
+
+networks:
+  e-shop-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
