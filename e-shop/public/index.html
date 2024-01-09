@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>E-Commerce Products</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+
+<body>
+  <header>
+    <h1>E-Commerce Products</h1>
+  </header>
+
+  <main class="container">
+    <div class="dashboard">
+      <h2>Add Product</h2>
+      <form id="addProductForm" onsubmit="addProduct(event)">
+        <input type="text" id="productName" name="name" placeholder="Product Name" required>
+        <input type="number" id="productPrice" name="price" placeholder="Price" required>
+        <input type="text" id="productDescription" name="description" placeholder="Description" required>
+        <button type="submit" class="btn btn-primary">Add Product</button>
+      </form>
+    </div>
+
+    <div class="products-container">
+      <!-- Product cards -->
+    </div>
+  </main>
+
+  <!-- Edit Product Modal -->
+  <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <form id="editProductForm" class="modal-body" onsubmit="saveChanges(event)">
+          <input type="text" id="editedProductName" class="form-control mb-2" placeholder="Edited Product Name"
+            required>
+          <input type="number" id="editedProductPrice" class="form-control mb-2" placeholder="Edited Price" required>
+          <input type="text" id="editedProductDescription" class="form-control mb-2" placeholder="Edited Description"
+            required>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+  <script>
+
+      let productsContainer;
+
+      function createProductCard(product) {
+        const productCard = document.createElement('div');
+        productCard.classList.add('product-card');
+        productCard.setAttribute('data-product-id', product._id);
+
+        const productName = document.createElement('h2');
+        productName.classList.add('product-name');
+        productName.textContent = product.name;
+
+        const productPrice = document.createElement('p');
+        productPrice.classList.add('product-price');
+        productPrice.textContent = `Price: $${product.price}`;
+
+        const productDescription = document.createElement('p');
+        productDescription.classList.add('product-description');
+        productDescription.textContent = product.description;
+
+        const editButton = document.createElement('button');
+        editButton.classList.add('edit-button', 'btn', 'btn-warning', 'mr-2');
+        editButton.textContent = 'Edit';
+
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('delete-button', 'btn', 'btn-danger');
+        deleteButton.textContent = 'Delete';
+
+        editButton.addEventListener('click', () => {
+          openEditForm(product);
+          $('#editProductModal').modal('show');
+        });
+
+        deleteButton.addEventListener('click', async () => {
+          try {
+            const response = await fetch(`/api/products/${product._id}`, {
+              method: 'DELETE'
+            });
+
+            if (response.ok) {
+              console.log('Product deleted successfully');
+              productsContainer.removeChild(productCard);
+            } else {
+              console.error('Failed to delete product');
+            }
+          } catch (error) {
+            console.error('Error deleting product:', error);
+          }
+        });
+
+        productCard.appendChild(productName);
+        productCard.appendChild(productPrice);
+        productCard.appendChild(productDescription);
+        productCard.appendChild(editButton);
+        productCard.appendChild(deleteButton);
+
+        return productCard;
+      }
+
+      async function fetchProductsAndUpdateUI() {
+        try {
+          const response = await fetch('/api/products');
+          if (response.ok) {
+            const products = await response.json();
+            const productsContainer = document.querySelector('.products-container');
+            productsContainer.innerHTML = '';
+
+            products.forEach(product => {
+              const productCard = createProductCard(product);
+              productsContainer.appendChild(productCard);
+            });
+          } else {
+            console.error('Failed to fetch products');
+          }
+        } catch (error) {
+          console.error('Error fetching products:', error);
+        }
+      }
+
+      async function addProduct(event) {
+        event.preventDefault();
+
+        const productName = document.getElementById('productName').value;
+        const productPrice = document.getElementById('productPrice').value;
+        const productDescription = document.getElementById('productDescription').value;
+
+        const newProduct = {
+          name: productName,
+          price: productPrice,
+          description: productDescription
+        };
+
+        try {
+          const response = await fetch('/api/products', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newProduct)
+          });
+
+          if (response.ok) {
+            console.log('Product added successfully:', newProduct);
+            fetchProductsAndUpdateUI();
+            document.getElementById('productName').value = "";
+            document.getElementById('productPrice').value = "";
+            document.getElementById('productDescription').value = "";
+          } else {
+            console.error('Failed to add product');
+          }
+        } catch (error) {
+          console.error('Error adding product:', error);
+        }
+      }
+
+      function openEditForm(product) {
+        const editedProductName = document.getElementById('editedProductName');
+        const editedProductPrice = document.getElementById('editedProductPrice');
+        const editedProductDescription = document.getElementById('editedProductDescription');
+
+        editedProductName.value = product.name;
+        editedProductPrice.value = product.price;
+        editedProductDescription.value = product.description;
+
+        $('#editProductModal').data('product-id', product._id);
+      }
+
+      fetch('/api/products')
+        .then(response => response.json())
+        .then(products => {
+          productsContainer = document.querySelector('.products-container');
+          products.forEach(product => {
+            const productCard = createProductCard(product);
+            productsContainer.appendChild(productCard);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching products:', error);
+        });
+
+    async function saveChanges(event) {
+      event.preventDefault();
+
+      const editedProductName = document.getElementById('editedProductName').value;
+      const editedProductPrice = document.getElementById('editedProductPrice').value;
+      const editedProductDescription = document.getElementById('editedProductDescription').value;
+
+      const updatedProduct = {
+        name: editedProductName,
+        price: editedProductPrice,
+        description: editedProductDescription
+      };
+
+      try {
+        const productId = $('#editProductModal').data('product-id');
+        const response = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updatedProduct)
+        });
+
+        if (response.ok) {
+          console.log('Product updated successfully:', updatedProduct);
+          $('#editProductModal').modal('hide');
+
+          const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+          const productNameElem = productCard.querySelector('.product-name');
+          const productPriceElem = productCard.querySelector('.product-price');
+          const productDescriptionElem = productCard.querySelector('.product-description');
+
+          productNameElem.textContent = updatedProduct.name;
+          productPriceElem.textContent = `Price: $${updatedProduct.price}`;
+          productDescriptionElem.textContent = updatedProduct.description;
+        } else {
+          console.error('Failed to update product');
+        }
+      } catch (error) {
+        console.error('Error updating product:', error);
+      }
+    }
+  </script>
+</body>
+
+</html>
