@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kiii-project-config
+  namespace: kiii
+data:
+  MONGO_DB_URL: |
+    {{- with secret "kiii-project-secret" -}}
+    {{ .Data.mongo-url | b64dec }}
+    {{- end -}}

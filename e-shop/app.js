@@ -10,7 +10,7 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-mongoose.connect(process.env.URI, {
+mongoose.connect(process.env.MONGO_DB_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
@@ -86,15 +86,16 @@ app.put('/api/products/:id', async (req, res) => {
   });
   
 
-app.get('/api/products', async (req, res) => {
-  try {
-    const products = await Product.find();
-    res.json(products);
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+  app.get('/api/products', async (req, res) => {
+    try {
+      const products = await Product.find();
+      console.log('Retrieved products:', products); // Log products here
+      res.json(products);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
 app.get('*', (req, res) => {
   res.sendFile(__dirname + '/public/index.html');

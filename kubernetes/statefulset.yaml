@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kiii-project-mongo
+  namespace: kiii  
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kiii-project-mongo
+  serviceName: "kiii-project-mongo"
+  template:
+    metadata:
+      labels:
+        app: kiii-project-mongo
+    spec:
+      containers:
+      - name: kiii-project-mongo
+        image: mongo:latest
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: kiii-project-config
+              key: MONGO_DB_URL
+        volumeMounts:
+        - name: kiii-project-mongo-storage
+          mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: kiii-project-mongo-storage
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi
