@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/StefanBatandjiev/KIII-project.git
     targetRevision: HEAD
-    path: master
+    path: kubernetes
   destination:
     server: https://kubernetes.default.svc
     namespace: kiii
