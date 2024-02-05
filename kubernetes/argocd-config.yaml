@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata: 
+  name: kiii-project
+  namespace: argocd
+spec: 
+  project: default
+
+  source:
+    repoURL: https://github.com/StefanBatandjiev/KIII-project.git
+    targetRevision: HEAD
+    path: master
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kiii
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+
+    automated:
+      selfHeal: true
+      prune: true
