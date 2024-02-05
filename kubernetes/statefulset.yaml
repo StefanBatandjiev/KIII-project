@@ -4,7 +4,7 @@ metadata:
   name: kiii-project-mongo
   namespace: kiii  
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: kiii-project-mongo
